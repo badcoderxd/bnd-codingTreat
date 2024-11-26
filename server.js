@@ -63,7 +63,7 @@ const executeNodeCode = async (code) => {
         const tempFile = path.join(__dirname, 'temp.js');
         fs.writeFileSync(tempFile, code);
 
-        exec(`docker run --rm -v ${path.dirname(tempFile)}:/app node:18 node /app/temp.js`, (err, stdout, stderr) => {
+        exec(`docker run --rm -v ${path.dirname(tempFile)}:/app node-compiler node /app/temp.js`, (err, stdout, stderr) => {
             fs.unlinkSync(tempFile);  // Clean up temp file
             if (err) {
                 reject(stderr);
