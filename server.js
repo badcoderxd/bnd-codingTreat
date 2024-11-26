@@ -57,26 +57,6 @@ const executeJavaCode = async (code) => {
   });
 };
 
-const executeNodeCode = async (code) => {
-    return new Promise((resolve, reject) => {
-        // Define the path to the temp.js file
-        const tempFile = path.join(__dirname, 'temp.js');
-
-        // Write the JavaScript code to the temporary file
-        fs.writeFileSync(tempFile, code);
-
-        // Run the Docker container to execute the temp.js file inside the Node.js container
-        exec(`docker run --rm -v ${path.dirname(tempFile)}:/app node-executor`, (err, stdout, stderr) => {
-            fs.unlinkSync(tempFile);  // Clean up the temporary file
-
-            if (err) {
-                reject(stderr);  // Reject with error message
-            } else {
-                resolve(stdout);  // Resolve with the output of the JavaScript code
-            }
-        });
-    });
-};
 
 // Function to execute Node.js code in Docker
 const executeNodeCode = async (code) => {
