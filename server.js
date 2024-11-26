@@ -31,6 +31,32 @@ const executePythonCode = async (code) => {
     });
 };
 
+const executeJavaCode = async (code) => {
+  return new Promise((resolve, reject) => {
+      // Define temporary file paths
+      const tempFile = path.join(__dirname, 'Temp.java');
+      const tempClassFile = path.join(__dirname, 'Temp.class');
+
+      // Write Java code to a temporary file
+      fs.writeFileSync(tempFile, code);
+
+      // Run Docker command to compile and execute the Java code inside the container
+      exec(`docker run --rm -v ${path.dirname(tempFile)}:/app java-compiler bash -c "javac /app/Temp.java && java -cp /app Temp"`, (err, stdout, stderr) => {
+          // Clean up temporary Java files
+          fs.unlinkSync(tempFile);  // Remove source file
+          if (fs.existsSync(tempClassFile)) {
+              fs.unlinkSync(tempClassFile);  // Remove compiled class file
+          }
+
+          if (err) {
+              reject(stderr);  // Reject with error message
+          } else {
+              resolve(stdout);  // Resolve with the output of the Java program
+          }
+      });
+  });
+};
+
 // Function to execute Node.js code in Docker
 const executeNodeCode = async (code) => {
     return new Promise((resolve, reject) => {
@@ -63,7 +89,11 @@ app.post('/api/execute', async (req, res) => {
             output = await executePythonCode(code);
         } else if (language === 'node') {
             output = await executeNodeCode(code);
-        } else {
+        } 
+        else if(language === 'java'){
+            output = await executeJavaCode(code);
+       } 
+      else {
             return res.status(400).json({ error: 'Unsupported language. Use "python" or "node"' });
         }
 
