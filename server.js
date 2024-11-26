@@ -10,7 +10,9 @@ const port = 4200;
 
 // Middleware to parse JSON request bodies
 app.use(bodyParser.json());
-app.use(cors())
+app.use(cors({
+origin:["https://sweet-jade.vercel.app", "*"]
+}))
 
 // Function to execute Python code in Docker
 const executePythonCode = async (code) => {
