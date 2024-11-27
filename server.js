@@ -75,6 +75,31 @@ const executeNodeCode = async (code) => {
     });
 };
 
+const executeCppCode = async (code) => {
+    return new Promise((resolve, reject) => {
+        // Define the path to the temporary C++ file
+        const tempFile = path.join(__dirname, 'temp.cpp');
+
+        // Write the C++ code to the temporary file
+        fs.writeFileSync(tempFile, code);
+
+        // Run Docker to compile and execute the C++ code
+        exec(`docker run --rm -v ${path.dirname(tempFile)}:/app cpp-compiler bash -c "g++ /app/temp.cpp -o /app/temp && /app/temp"`, (err, stdout, stderr) => {
+            // Clean up the temporary C++ source and binary files
+            fs.unlinkSync(tempFile);  // Remove the source file
+            if (fs.existsSync(path.join(__dirname, 'temp'))) {
+                fs.unlinkSync(path.join(__dirname, 'temp'));  // Remove the compiled binary
+            }
+
+            if (err) {
+                reject(stderr);  // Reject if there is an error
+            } else {
+                resolve(stdout);  // Resolve with the output of the program
+            }
+        });
+    });
+};
+
 // Single API endpoint for executing code in different languages
 app.post('/api/execute', async (req, res) => {
     const { language, code } = req.body;
@@ -96,6 +121,9 @@ app.post('/api/execute', async (req, res) => {
        } 
        else if(language === 'nodejs'){
           output = await executeNodeCode(code);
+       }
+       else if(language === 'cpp'){
+         output = await executeCppCode(code);
        }
       else {
             return res.status(400).json({ error: 'Unsupported language.' });
